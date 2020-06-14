@@ -22,12 +22,12 @@ abstract public class Neuron {
     abstract public double getOutput(double[] input);
     
     /**
-     * Выдаёт производную от функции активации. Ну типа того.
+     * Выдаёт производную от функции активации по сумме входов (d F / d S). Ну типа того.
      * Производная должна выдаваться по каждой сумме (если их несколько)
      * @param output текущий выход сети 
      * @return градиент при данном выходе (???)
      */ 
-    abstract public double[] getDifference(double output);
+    abstract public double[] getDifference(double input[]);
     //будет рассчитывать веса исходя из некоторых соображений
     
     abstract public int getNClass();
@@ -48,7 +48,7 @@ abstract public class Neuron {
         weights = new double[1][inputCount];
         // заполняем произвольными весами
         for (int i = 0; i < weights[0].length; i++) {
-            weights[0][i] = 0.5;//Math.random();
+            weights[0][i] = Math.random();
         }
     }
     
@@ -151,6 +151,19 @@ abstract public class Neuron {
                 setWeight(i, j, values[i][j]);
             }
         }
+    }
+    
+    /**
+     * Вычисляет сумму со всех входов с учётом весов
+     * @param input входы в нейрон
+     * @return взвешенная сумма
+     */
+    protected double getSum(double[] input) {
+        double sum = 0;
+        for (int i = 0; i < input.length; i++) {
+            sum += weights[0][i] * input[i];
+        }    
+        return sum;
     }
     
     //</editor-fold>

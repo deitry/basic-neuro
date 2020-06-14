@@ -12,12 +12,10 @@ import java.util.List;
  * @author deitry
  */
 public class Network {
-    // пока почти полная копия из книжки.
-    // Чуть погодя заменю тут всё и обобщу
-    
-    /** 
+    //<editor-fold defaultstate="collapsed" desc="поля">
+    /**
      * нейроны
-     */ 
+     */
     private final Neuron[][] percs;
     public Neuron[][] getNetwork() {
         return percs.clone();
@@ -25,36 +23,25 @@ public class Network {
     /**
      * Выходные значения нейронов. Нужны, чтобы можно было ссылаться на них
      * и использовать в своих коварных целях
-     */ 
+     */
     private double[][] values;
     /**
      * Массив принудительной установки значений связей.
      * За счёт него можно влиять на топологию сети.
      * Первый индекс - номер слоя;
      * Второй индекс - номер нейрона;
-     * Третий индекс - номер связи (оно же - номер передающего нейрона с 
+     * Третий индекс - номер связи (оно же - номер передающего нейрона с
      * прошлого слоя).
      */
     private double[][][] relations;
     
     /**
      * Используется как флаг принудительной замены связи.
-     * Если ~[i][j][k] = true, то текущий весовой коэффициент подлежит замене 
+     * Если ~[i][j][k] = true, то текущий весовой коэффициент подлежит замене
      * на число из relations
      */
     private boolean[][][] isForced;
-    
-    //<editor-fold defaultstate="collapsed" desc="weights">
-    /*
-     * отнесём веса к сети? Или чё? В общем, есть идея, что для обобщения
-     * сети на произвольную топологию нужно организовывать связи за счёт самой
-     * сети, а не нейронов. Блин, не знаю. Пусть будет
-     */
-    // private double[][] weights;
     //</editor-fold>
-    
-    
-    
     
     //<editor-fold defaultstate="collapsed" desc="конструкторы">
     /**
@@ -117,12 +104,24 @@ public class Network {
                                 ? perceptronType[0][0]
                                 : perceptronType[i][j];
                 switch (type) {
-                    case 0 : percs[i][j] = new Perceptron(num);
+                    case 0 : percs[i][j] = new N0Perceptron(num);
                              break;
-                    case 1 : percs[i][j] = new LinearNeuron(num);
+                    case 1 : percs[i][j] = new N1Linear(num);
                              break;
-                    case 2 : percs[i][j] = new NConstant(num);
+                    case 2 : percs[i][j] = new N2Constant(num);
                              break;
+                    case 3 : percs[i][j] = new N3Exponent(num);
+                             break;
+                    case 4 : percs[i][j] = new N4Sin(num);
+                             break;
+                    case 5 : percs[i][j] = new N5Square(num);
+                             break;
+                    case 6 : percs[i][j] = new N6Amplificate(num);
+                             break;
+                    case 9 : percs[i][j] = new N9RBF(num);
+                             break;    
+                    case 11 : percs[i][j] = new N11Nonlinear(num);
+                             break;    
                 }
                 
                 
@@ -135,76 +134,6 @@ public class Network {
                 }
             }
         }
-        
-    }
-    
-    
-    /**
-     * Создаёт сеть произвольной глубины с произвольным количеством нейронов 
-     * на уровне; нейроны при этом могут быть произвольного типа
-     * @param perceptronNumber количество нейронов
-     * @param perceptronType массив, содержащий номера типов нейронов
-     * @param inputCount количество входов в сеть
-     */
-    private Network(int[] perceptronNumber,
-                   int[][] perceptronType,
-                   int inputCount,
-                   double loadWeights[][][][]) {
-        
-        // создаёт простую сеть
-        if (perceptronNumber.length == 0) {
-            throw new IllegalArgumentException(
-                    "wrong number of layers");
-        }
-        if (inputCount <= 0) {
-            throw new IllegalArgumentException(
-                    "wrong number of inputs");
-        }
-        for (int i = 0; i < perceptronNumber.length; i++) {
-            if (perceptronNumber[i] <= 0) {
-                throw new IllegalArgumentException(
-                        "wrong number of perceptron in a layer");
-            }
-        }
-        percs = new Neuron[perceptronNumber.length][];
-        values = new double[perceptronNumber.length + 1][];
-        relations = new double[perceptronNumber.length][][];
-        isForced = new boolean[perceptronNumber.length][][];
-        
-        values[0] = new double[inputCount]; // сюда будут писаться входы
-        for (int i = 0; i < percs.length; i++) {
-            percs[i] = new Neuron[perceptronNumber[i]];
-            values[i + 1] = new double[perceptronNumber[i]];
-            relations[i] = new double[perceptronNumber[i]][];
-            isForced[i] = new boolean[perceptronNumber[i]][];
-            int num = (i == 0) ? inputCount 
-                               : percs[i - 1].length;
-            for (int j = 0; j < percs[i].length; j++) {
-                // выбор типа нейрона на основе переданного массива
-                int type = (perceptronType.length == 1)
-                                ? perceptronType[0][0]
-                                : perceptronType[i][j];
-                switch (type) {
-                    case 0 : percs[i][j] = new Perceptron(num);
-                             break;
-                    case 1 : percs[i][j] = new LinearNeuron(num);
-                             break;
-                    case 2 : percs[i][j] = new NConstant(num);
-                             break;
-                }
-                
-                
-                relations[i][j] = new double[num];
-                isForced[i][j] = new boolean[num];
-                // инициализация массива принудительных связей
-                for (int k = 0; k < num; k++) {
-                    relations [i][j][k] = 0;
-                    isForced[i][j][k] = false;
-                }
-            }
-        }
-        
-        
         
     }
     
@@ -224,33 +153,64 @@ public class Network {
     //</editor-fold>
    
     //<editor-fold defaultstate="collapsed" desc="обучение">
+    /**
+    * Скорость обучения
+    */
+    private double accuracy = 0.001;
+    private double eta = 0.3;
     
-    /** 
-     * обучается ли сейчас сеть
-     */ 
-    private boolean isTraining = true;
-    
-    public void trainOn() {
-        isTraining = true;
-    }
-    
-    public void trainOff() {
-        isTraining = false;
-    }
-  
-     /**
-     * Скорость обучения
+    //<editor-fold defaultstate="collapsed" desc="различные функции">
+    /**
+     * Устанавливает значение скорости обучения.
+     * @param value
      */
-    private final double eta = 0.001;
-    private final double accurate = 0.0001;
-
+    public void setAccuracy(double value) {
+        accuracy = value;
+    }
+    /**
+     * Возвращает текущее значение точности обучения.
+     * @return
+     */
+    public double getAccuracy() {
+        return accuracy;
+    }
     
+    /**
+     * Устанавливает максимальное значение скорости обучения.
+     * @param value
+     */
+    public void setEta(double value) {
+        eta = value;
+    }
+    /**
+     * Возвращает текущее максимальное значение скорости обучения.
+     * @return
+     */
+    public double getEta() {
+        return eta;
+    }
+    
+    /**
+     * Возвращает значение скорости обучения при конкретных значениях веса и
+     * его изменения. По факту - варьирует скорость обучения между некоторыми
+     * максимальным и минимальным значением в зависимости от представлений о
+     * том, с какой скоростью должна обучаться та или иная величина. Т.е.
+     * подавляет слишком большое изменение веса и усиливает (по сравнению со
+     * средним значением скорости обучения) слишком маленькое. Функция
+     * неидеальна, но в некоторых случаях работает хорошо. Разве что для
+     * конкретных сетей нужно подбирать хорошее максмальное значение скорости\
+     * обучения.
+     * @param weight
+     * @param dweight
+     * @return
+     */
     public double getEta(double weight, double dweight) {
         double result;
         double S = dweight / (weight * 4);
-        result = eta / (1 + Math.exp(Math.log( Math.abs(S) ))) + 0.0001;
+        result = eta / (1 + Math.exp(Math.log( Math.abs(S) ))) + accuracy/10;
         return result;
     }
+    //</editor-fold>
     
     /**
      * Осуществляет обучение сети согласно набору входных данных и
@@ -289,50 +249,49 @@ public class Network {
         }
         // проход по количеству шагов тренировки - ограничение на количество
         for (int i = 0; i < numberOfSteps; i++) {
+            // сначала проходимся по всем примерам и замеряем наибольшую ошибку
+            double maxError = 0;
+            for (int j = 0; j < answers.length; j++) {
+                for (int k = 0; k < answers[j].length; k++) {
+                    final double error = this.getOutput(inputs[j])[k] 
+                                - answers[j][k];
+                    if (Math.abs(error) > Math.abs(maxError)) {
+                    maxError = error;
+                    }
+                }
+            }
             // проход по всем тестовым примерам
             for (int j = 0; j < inputs.length; j++) {
-                //if (false) {
-                
-                double maxError = 0;
-                
-                // проход по выходам! - замеряем макс ошибку
-                // !  почему-то хреново работает
-                    for (int l = 0; l < answers[j].length; l++) {
-                        double error = this.getOutput(inputs[j])[l] 
-                                        - answers[j][l];
-                        if (Math.abs(error) > Math.abs(maxError)) {
-                            maxError = error;
-                        }
-                    }
                     
-                
+                //<editor-fold defaultstate="collapsed" desc="вывод весов на экран">
                 // проход по количеству возможных входов
                 for (int k = 0; k < inputs[j].length; k++) {
-                
-                // вывод
-                if (false) {    
-                    this.getOutput(inputs[j]);
-                    System.out.println( (int)i + " " +
-                        //j + " " + k + " : " +
-                        (double)inputs[j][k] + 
-                        "    w000 " + percs[0][0].weights[0][k] + 
-                        "    w100 " + percs[1][0].weights[0][0] + 
-                        "    w101 " + percs[1][0].weights[0][1] + 
-                        "    error: " + maxError);
-                
+                    
+                    // вывод
+                    if (false) {
+                        this.getOutput(inputs[j]);
+                        System.out.println( (int)i + " " +
+                                //j + " " + k + " : " +
+                                (double)inputs[j][k] +
+                                "    w000 " + percs[0][0].weights[0][k] +
+                                "    w100 " + percs[1][0].weights[0][0] +
+                                "    w101 " + percs[1][0].weights[0][1] +
+                                "    error: " + maxError);
+                        
+                    }
                 }
-                }
+                //</editor-fold>
+                
                 // вызов процедуры, отвечающей за "однократную" тренировку
                 train(inputs[j], answers[j]);
                 // если достигли заданной точности - выход
                 number = i;
-                if ((Math.abs(maxError) <= this.accurate) || 
+                if ((Math.abs(maxError) <= this.accuracy) || 
                      Double.isNaN(maxError)) {
                     i = numberOfSteps;
                     j = inputs.length;
                 }
             }
-            
         }
         System.out.println("number of steps : " + number);
     }
@@ -361,6 +320,7 @@ public class Network {
                 if (i == percs.length - 1) {
                     delta = answers[j] - output;
                 } else { // если не последний
+                    
                     delta = 0;
                     // проходимся по всем входам нейрона на следующем слое
                     for (int k = 0; k < percs[i+1].length; k++) {
@@ -369,17 +329,15 @@ public class Network {
                     }
                 }
                 
-                delta *= percs[i][j].getDifference(output)[0];
+                double[] nInputs = (i == 0) ? inputs
+                                            : outputs[i-1];
+                delta *= percs[i][j].getDifference(nInputs)[0];
                 deltas.add(delta);
                 
                 // изменение весов
                 // проход по k - количество входов
                 double[] in = this.getInputs(i, j);
                 for (int k = 0; k < in.length; k++) {
-                    
-                    
-                    // процедура коррекции весов
-                    // percs[i][j].weightsCorrection(in);                                         
                     
                     // изменяем этот вес
                     final double w0 = percs[i][j].getWeight(k);
@@ -441,6 +399,7 @@ public class Network {
     }
     
     //</editor-fold>
+    
     //<editor-fold defaultstate="collapsed" desc="вывод результатов/весов">
     /**
      * Вычисляет все значения сети

@@ -10,18 +10,18 @@ package neuronetwork;
  * 
  * @author deitry
  */
-public class NConstant extends Neuron {
+public class N2Constant extends Neuron {
 
     @Override
     public int getNClass() {
         return 2;
     }
     
-    public NConstant(){
+    public N2Constant(){
         // реализуем обычный нейрон, но без входов
         super(0);
     }
-    public NConstant(int inputCount){
+    public N2Constant(int inputCount){
         // реализуем обычный нейрон, но без входов
         super(inputCount);
     }
@@ -33,7 +33,7 @@ public class NConstant extends Neuron {
     }
 
     @Override
-    public double[] getDifference(double output) {
+    public double[] getDifference(double[] input) {
         return new double[] {0};
     }
     

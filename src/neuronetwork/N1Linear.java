@@ -8,7 +8,7 @@ package neuronetwork;
  *
  * @author deitry
  */
-public class LinearNeuron extends Neuron {
+public class N1Linear extends Neuron {
 
     @Override
     public int getNClass() {
@@ -17,18 +17,16 @@ public class LinearNeuron extends Neuron {
     
     
     //<editor-fold defaultstate="collapsed" desc="конструкторы">
-    public LinearNeuron(int inputCount) {
+    public N1Linear(int inputCount) {
         super(inputCount);
     }
     
     /**
-     * Конструктор с заданными значениями весов. Обратите внимание, что
-     * количество весов должно быть на единицу больше, поскольку в блок 
-     * наравне с другими входами по умолчанию подаётся "единичка"
-     * @param inputCount количество входов // без учёта единички
+     * Конструктор с заданными значениями весов.
+     * @param inputCount количество входов
      * @param weightsInit массив с исходными значениями для весов
      */
-    public LinearNeuron(int inputCount, double[] weightsInit) {
+    public N1Linear(int inputCount, double[] weightsInit) {
         super(inputCount + 1, weightsInit);
     }
     //</editor-fold>
@@ -48,7 +46,7 @@ public class LinearNeuron extends Neuron {
     }
 
     @Override
-    public double[] getDifference(double output) {
+    public double[] getDifference(double input[]) {
         double[] result = new double[weights.length];
         for (int i = 0; i < weights.length; i++) {
             result[i] = 1;
